@@ -15,7 +15,6 @@ body:
       label: 简要描述Briefly Description
       description: Briefly describe the problem
       placeholder: 描述现象Tell us what you see!
-      value: ""
     validations:
       required: true
   - type: textarea
@@ -24,7 +23,6 @@ body:
       label: 复现步骤Steps to reproduce
       description: how to make cause the bug again
       placeholder: 
-      value: ""
     validations:
       required: true
   - type: textarea
@@ -33,7 +31,6 @@ body:
       label: 期望结果Expection
       description: paste the info displayed on terminal
       placeholder: 
-      value: ""
     validations:
       required: true
   - type: dropdown
