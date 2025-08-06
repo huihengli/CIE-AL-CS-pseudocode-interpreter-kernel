@@ -1,0 +1,43 @@
+name: 功能需求Function Request
+description: 提功能需求Request a New Function
+title: "[Bug]: "
+labels: ["功能需求", "未解决"]
+assignees:
+  - huihengli
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈，我们会尽快处理Thanks for reporting, we will get to that as soon as we receive the report
+  - type: textarea
+    id: description
+    attributes:
+      label: 简要描述Briefly Description
+      description: Briefly describe the feature or function
+      placeholder: 加一个xxx功能
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: 功能要求Requirement of Function
+      description: 功能详细要求Detail of the function
+      placeholder: 
+    validations:
+      required: true
+  - type: input
+    id: contact
+    attributes:
+      label: 联系方式Contact Details
+      description: 如有需要后续联系，请填写可联系的邮箱，我们将通过邮箱联系你(需勾选下一项)If you need further contact, please fill in the contactable email address and we will contact you via email (need to check the next item)
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: 需要邮箱联系Need to be contacted
+      description: by checking this box, I need a further contact 
+      options:
+        - label: by checking this box, I need a further contact via email
+          required: false
