@@ -1,64 +1,76 @@
-name: 123test
-description: File a bug report.
+name: 漏洞反馈Bug Report
+description: 核心功能漏洞反馈Reporting the bug of core code
 title: "[Bug]: "
-labels: ["bug", "triage"]
-projects: ["octo-org/1", "octo-org/44"]
+labels: ["核心功能bug", "未解决"]
 assignees:
-  - octocat
+  - huihengli
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report!
-  - type: input
-    id: contact
-    attributes:
-      label: Contact Details
-      description: How can we get in touch with you if we need more info?
-      placeholder: ex. email@example.com
-    validations:
-      required: false
+        感谢反馈，我们会尽快处理Thanks for reporting, we will get to that as soon as we receive the report
   - type: textarea
-    id: what-happened
+    id: description
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
-      placeholder: Tell us what you see!
-      value: "A bug happened!"
+      label: 简要描述Briefly Description
+      description: Briefly describe the problem
+      placeholder: 描述现象Tell us what you see!
+      value: ""
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤Steps to reproduce
+      description: how to make cause the bug again
+      placeholder: 
+      value: ""
+    validations:
+      required: true
+  - type: textarea
+    id: expect
+    attributes:
+      label: 期望结果Expection
+      description: paste the info displayed on terminal
+      placeholder: 
+      value: ""
     validations:
       required: true
   - type: dropdown
-    id: version
+    id: sysenv
     attributes:
-      label: Version
-      description: What version of our software are you running?
+      label: 运行系统环境System Environment
+      description: 运行该程序的系统The System running the software
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - Windows 7
+        - Windows 10 or 11
+        - MacOS
+        - Linux
+        - Other
       default: 0
     validations:
       required: true
-  - type: dropdown
-    id: browsers
+  - type: input
+    id: specsys
     attributes:
-      label: What browsers are you seeing the problem on?
-      multiple: true
-      options:
-        - Firefox
-        - Chrome
-        - Safari
-        - Microsoft Edge
-  - type: textarea
-    id: logs
+      label: 具体的系统版本Specific System Version
+      description: 如果你是Linux系统的分支或者其他系统，请将系统名称和版本填写清楚If you are using a branch of Linux or other systems, please fill in the system name and version clearly.
+      placeholder: CentOS 7.6
+    validations:
+      required: false
+  - type: input
+    id: contact
     attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
-      render: shell
+      label: 联系方式Contact Details
+      description: 如有需要后续联系，请填写可联系的邮箱，我们将通过邮箱联系你(需勾选下一项)If you need further contact, please fill in the contactable email address and we will contact you via email (need to check the next item)
+      placeholder: ex. email@example.com
+    validations:
+      required: false
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct
-      description: By submitting this issue, you agree to follow our [Code of Conduct](https://example.com). 
+      label: 需要邮箱联系Need to be contacted
+      description: by checking this box, I need a further contact 
       options:
-        - label: I agree to follow this project's Code of Conduct
-          required: true
+        - label: by checking this box, I need a further contact via email
+          required: false
