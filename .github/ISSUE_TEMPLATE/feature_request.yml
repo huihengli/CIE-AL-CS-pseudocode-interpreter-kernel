@@ -1,6 +1,6 @@
 name: 功能需求Function Request
 description: 提功能需求Request a New Function
-title: "[Bug]: "
+title: "[Feature]: "
 labels: ["功能需求", "未解决"]
 assignees:
   - huihengli
@@ -41,3 +41,4 @@ body:
       options:
         - label: by checking this box, I need a further contact via email
           required: false
+
