@@ -529,6 +529,7 @@ class Parser:
             target = self.parse_expression()
             return AddressOf(target=target)
 
+
         # 先处理左侧：变量、字段访问、或者函数调用
         if self.current() and self.current().type == "IDENTIFIER":
             node = self.parse_possible_field_access()
@@ -563,8 +564,8 @@ class Parser:
                 self.eat("CARET")
                 node = Dereference(pointer=node)
 
-            # 二元操作
-            OPERATOR_TOKS = ("OPERATOR", "GTE", "LTE", "NEQ", "STRCOMB")
+            # 一元与二元操作
+            OPERATOR_TOKS = ("OPERATOR", "GTE", "LTE", "NEQ", "STRCOMB", "LOGICOP")
             if self.current() and self.current().type in OPERATOR_TOKS:
                 tok = self.eat(self.current().type)
                 if tok.type == "NEQ":
@@ -575,12 +576,24 @@ class Parser:
                     op = "<="
                 elif tok.type == "STRCOMB":
                     op = "&"
+                elif tok.value == "AND":
+                    op = "AND"
+                elif tok.value == "OR":
+                    op = "OR"
                 else:
                     op = tok.value
                 right = self.parse_expression()
                 return BinaryOp(left=node, operator=op, right=right)
 
             return node
+        else:
+            UnaryOpToks = ("NOT")
+            if self.current() and self.current().type == "LOGICOP" and self.current().value in UnaryOpToks:
+                tok = self.eat(self.current().type)
+                op = tok.value
+                right = self.parse_expression()
+                return UnaryOp(operator=op, operand=right)
+
 
         # 不是标识符的左操作数：数字/字符串/括号
         token = self.current()
@@ -599,25 +612,6 @@ class Parser:
             self.eat("RPAREN")
         else:
             raise SyntaxError(f"Invalid left operand: {token}")
-
-        # 二元操作
-        OPERATOR_TOKS = ("OPERATOR", "GTE", "LTE", "NEQ", "STRCOMB")
-        if self.current() and self.current().type in OPERATOR_TOKS:
-            tok = self.eat(self.current().type)
-            if tok.type == "NEQ":
-                op = "<>"
-            elif tok.type == "GTE":
-                op = ">="
-            elif tok.type == "LTE":
-                op = "<="
-            elif tok.type == "STRCOMB":
-                op = "&"
-            else:
-                op = tok.value
-            right = self.parse_expression()
-            return BinaryOp(left=left, operator=op, right=right)
-
-        return left
 
 
     def parse_lvalue(self):
