@@ -83,3 +83,7 @@ I might not figure out some of the bugs, if you find them out, please feel free 
 ## Donation
 If you think my program is good, you can buy me a coffee! This will encourage me! Thanks
 <img style="width:40%;" src="https://s2.loli.net/2023/06/09/eFHIZ1NpDhoAUnb.png"/>
+# License
+
+This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
+You may modify and redistribute this project non-commercially under the same license, with proper attribution.
