@@ -21,6 +21,7 @@ def tokenize(code: str) -> list[Token]:
         ("NEQ", r"<>"),
         ("GTE", r">="),
         ("LTE", r"<="),
+        ("LOGICOP", r"\b(AND|OR|NOT)\b"),
         ("OPERATOR", r"[+\-*/><=]"),
         ("NUMBER", r"\d+(\.\d+)?"),  # 支持实数
         ("STRING", r'"[^"\n]*"'),
