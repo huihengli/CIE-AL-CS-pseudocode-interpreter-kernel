@@ -347,9 +347,14 @@ class Interpreter:
                 raise Exception("Unsupported assignment target")
 
         elif isinstance(node, Var):
-            if node.name not in self.env:
-                raise Exception(f"Variable '{node.name}' was not declared.")
-            return self.env[node.name]
+            if node.name.upper() == "TRUE":
+                return True
+            elif node.name.upper() == "FALSE":
+                return False
+            else:
+                if node.name not in self.env:
+                    raise Exception(f"Variable '{node.name}' was not declared.")
+                return self.env[node.name]
 
         elif isinstance(node, Number):
             return int(node.value)
@@ -369,6 +374,9 @@ class Interpreter:
             left = self.eval(node.left)
             right = self.eval(node.right)
             return self.apply_op(left, node.operator, right)
+        elif isinstance(node, UnaryOp):
+            right = self.eval(node.operand)
+            return not bool(right)
         elif isinstance(node, While):
             while self.eval(node.condition):
                 for stmt in node.body:
@@ -570,14 +578,18 @@ class Interpreter:
             raise Exception(f"Unknown node type: {type(node)}")
         
     def apply_op(self, left, op, right):
-        if op == '+':
+        if op == 'AND':
+            return bool(left) and bool(right)
+        elif op == 'OR':
+            return bool(left) or bool(right)
+        elif op == '+':
             return left + right
         elif op == '-':
             return left - right
         elif op == '*':
             return left * right
         elif op == '/':
-            return left / right  # 还是整数除法，按你原本实现
+            return left / right
         elif op == '&':
             return str(left) + str(right)
         elif op == '<':
