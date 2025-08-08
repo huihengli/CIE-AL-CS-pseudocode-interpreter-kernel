@@ -28,7 +28,7 @@ Hope this will be helpful to CIE CS study and teaching :-)
  - Output
  -  Arithmetic operations
  - Relational operations
- - Logic operators(forgot in the v1.0, will be updated)
+ - Logic operators (AND, OR, NOT)
  - String functions and operations
  - Numeric functions
  - Selection
@@ -87,3 +87,4 @@ If you think my program is good, you can buy me a coffee! This will encourage me
 
 This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 You may modify and redistribute this project non-commercially under the same license, with proper attribution.
+
