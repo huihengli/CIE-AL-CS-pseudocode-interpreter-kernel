@@ -203,71 +203,61 @@ class Interpreter:
 
 
         elif isinstance(node, Declare):
+            # 指针
             if isinstance(node.type, PointerType):
                 self.env[node.name] = None
                 self.var_types[node.name] = node.type
-            elif isinstance(node.type, str) and node.type in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
+                return None
+
+            # 内建标量类型
+            if isinstance(node.type, str) and node.type in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
                 self.env[node.name] = self.default_value(node.type)
                 self.var_types[node.name] = node.type
-            elif isinstance(node.type, str) and node.type in self.user_types:
-                type_def = self.user_types[node.type]
-                if isinstance(type_def, PointerType):  # pointer alias via TYPE T = ^INTEGER
-                    self.env[node.name] = None
-                    self.var_types[node.name] = type_def
-                elif isinstance(type_def, dict):  # struct
-                    self.env[node.name] = {
-                        field_name: self.default_value(field_type)
-                        for field_name, field_type in type_def.items()
-                    }
-                    self.var_types[node.name] = node.type
-                else:
-                    raise Exception(f"Unhandled user type definition for {node.type}")
-            elif isinstance(node.type, ArrayType):
-                name = node.name
-                # 计算并存下 bounds（可以保持 expression 形式也可以提前 eval 成 int）
-                lowers = []
-                uppers = []
-                for l in node.type.lowers:
-                    lowers.append(self.eval(l) if not isinstance(l, int) else l)
-                for u in node.type.uppers:
-                    uppers.append(self.eval(u) if not isinstance(u, int) else u)
+                return None
 
-                # 初始化内部表示
-                self.env[name] = {
+            # 数组
+            if isinstance(node.type, ArrayType):
+                lowers = [(self.eval(b) if not isinstance(b, int) else b) for b in node.type.lowers]
+                uppers = [(self.eval(b) if not isinstance(b, int) else b) for b in node.type.uppers]
+                self.env[node.name] = {
                     "is_array": True,
                     "lowers": lowers,
                     "uppers": uppers,
                     "base_type": node.type.base_type,
-                    "data": {},  # 存实际元素
+                    "data": {},
                 }
-                self.var_types[name] = node.type  # 如果你后面需要追踪原始 ArrayType 可以保留，访问时 special-case
-            elif node.type in ("INTEGER", "REAL", "STRING", "BOOLEAN", "CHAR", "DATE"):
-                self.env[node.name] = self.default_value(node.type)
                 self.var_types[node.name] = node.type
-            elif isinstance(node.type, str) and node.type in self.user_types:
+                return None
+
+            # 用户自定义类型（类）
+            if isinstance(node.type, str) and node.type in self.user_types:
                 typedef = self.user_types[node.type]
-                if isinstance(typedef, dict):
-                    # Struct 类型
-                    self.env[node.name] = {
-                        field_name: self.default_value(field_type)
-                        for field_name, field_type in typedef.items()
-                    }
-                    self.var_types[node.name] = node.type
-                elif isinstance(typedef, PointerType):
-                    # Pointer alias 类型
+
+                # ✅ 现在只支持 ClassDef，不再是 dict
+                if isinstance(typedef, ClassDef):
+                    # 初始化实例：把所有字段设成默认值
+                    instance = {}
+                    for access, field_name, field_type in typedef.fields:
+                        instance[field_name] = self.default_value(field_type)
+                    self.env[node.name] = instance
+                    # 记下这个变量的“类型”为 ClassDef，后续 FieldAccess 用得到
+                    self.var_types[node.name] = typedef.name
+                    return None
+
+                # 兼容指针别名
+                if isinstance(typedef, PointerType):
                     self.env[node.name] = None
                     self.var_types[node.name] = typedef
-                elif isinstance(typedef, ArrayType):
-                    # Array alias（你没用过？预留）
-                    self.env[node.name] = self.init_array(typedef)
-                    self.var_types[node.name] = typedef
-                else:
-                    raise Exception(f"Unsupported user-defined type: {typedef}")
+                    return None
 
-            else:
-                raise Exception(f"Unknown type '{node.type}'")
+                # （若你未来有 ArrayType 的 type alias，这里也可以加）
+                raise Exception(f"Unsupported user-defined type: {typedef}")
+
+            raise Exception(f"Unknown type '{node.type}'")
+
 
         elif isinstance(node, Assign):
+            # print("DEBUG Assign:", node)
             value = self.eval(node.value)
 
             # 普通变量
@@ -283,20 +273,23 @@ class Interpreter:
 
             # 字段访问（user-defined type）
             elif isinstance(node.target, FieldAccess):
-                struct_name = node.target.var_name
+                var_name = node.target.var_name
                 field_name = node.target.field_name
-                struct = self.env.get(struct_name)
-                if struct is None or not isinstance(struct, dict):
-                    raise Exception(f"'{struct_name}' is not a structured variable")
-                user_type_name = self.var_types.get(struct_name)
-                if user_type_name not in self.user_types:
-                    raise Exception(f"Unknown structured type '{user_type_name}' for {struct_name}")
-                field_types = self.user_types[user_type_name]
+
+                if var_name not in self.env:
+                    raise Exception(f"Variable '{var_name}' not declared")
+
+                type_name = self.var_types[var_name]
+                typedef = self.user_types[type_name]
+                if not isinstance(typedef, ClassDef):
+                    raise Exception(f"Type '{type_name}' is not a class/struct")
+
+                field_types = {fname: ftype for _, fname, ftype in typedef.fields}
                 if field_name not in field_types:
-                    raise Exception(f"'{field_name}' is not a field of type '{user_type_name}'")
-                expected_type = field_types[field_name]
-                value = self.convert(value, expected_type)
-                struct[field_name] = value
+                    raise Exception(f"'{field_name}' is not a field of type '{type_name}'")
+
+                value = self.eval(node.value)
+                self.env[var_name][field_name] = value
 
             # 数组访问
             elif isinstance(node.target, ArrayAccess):
@@ -450,10 +443,29 @@ class Interpreter:
             self.env[node.var_name] = value
 
         elif isinstance(node, FieldAccess):
-            struct = self.env.get(node.var_name)
-            if struct is None or not isinstance(struct, dict):
-                raise Exception(f"'{node.var_name}' is not a structured variable")
-            return struct.get(node.field_name)
+            var_name = node.var_name
+            field_name = node.field_name
+
+            if var_name not in self.env:
+                raise Exception(f"Variable '{var_name}' not declared")
+
+            # 取变量的类型名
+            type_name = self.var_types[var_name]  # e.g. "Student"
+            if type_name not in self.user_types:
+                raise Exception(f"Unknown type '{type_name}'")
+
+            typedef = self.user_types[type_name]
+            if not isinstance(typedef, ClassDef):
+                raise Exception(f"Type '{type_name}' is not a class/struct")
+
+            # 检查字段是否存在
+            field_types = {fname: ftype for _, fname, ftype in typedef.fields}
+            if field_name not in field_types:
+                raise Exception(f"'{field_name}' is not a field of type '{type_name}'")
+
+            # 返回当前实例的字段值
+            return self.env[var_name][field_name]
+
         
         elif isinstance(node, TypeDef):
             # 记录结构体定义：把字段列表变成名字->类型的 dict
@@ -570,10 +582,17 @@ class Interpreter:
                     else:
                         return self.default_value(array_info["base_type"])
             raise Exception(f"Invalid pointer reference: {ptr}")
-
-
-
-
+        
+        elif isinstance(node, ClassDef):
+            # 注册类定义
+            # self.user_types[node.name] = {
+            #     "fields": node.fields,     # [(access, name, type)]
+            #     "methods": node.methods,   # [ProcedureDef / FunctionDef]
+            # }
+            # field_map = {fname: ftype for (access, fname, ftype) in node.fields}
+            # self.user_types[node.name] = field_map
+            self.user_types[node.name] = node
+            return None
         else:
             raise Exception(f"Unknown node type: {type(node)}")
         
