@@ -43,6 +43,11 @@ class BinaryOp(Node):
     right: Node
 
 @dataclass
+class UnaryOp(Node):
+    operator: str
+    operand: Node
+
+@dataclass
 class If(Node):
     condition: Node
     body: list[Node]
@@ -111,6 +116,7 @@ class ProcedureDef:
     name: str
     params: list[Param]
     body: list[Stmt]
+    access: str = "PUBLIC"   # 默认 PUBLIC
 
 @dataclass
 class FunctionDef:
@@ -118,6 +124,7 @@ class FunctionDef:
     params: list[Param]
     return_type: str
     body: list[Stmt]
+    access: str = "PUBLIC"   # 默认 PUBLIC
 
 @dataclass
 class Call:
@@ -158,3 +165,17 @@ class PointerRef:
 @dataclass
 class PointerType:
     base_type: str  # e.g., "INTEGER", "REAL", etc.
+
+@dataclass
+class ClassDef:
+    name: str
+    fields: list  # [(access, name, type)]
+    methods: list  # [ProcedureDef / FunctionDef with access]
+
+@dataclass
+class MethodDef:
+    name: str
+    access: str   # "PUBLIC" or "PRIVATE"
+    body: list
+    params: list
+    returns: str | None
