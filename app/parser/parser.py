@@ -349,48 +349,72 @@ class Parser:
                     raise SyntaxError(f"Unknown base type for pointer alias: {base_token.value}")
                 ptr_type = PointerType(base_type=base_token.value)
                 self.user_types[type_name] = ptr_type  # 注册 alias
-                return TypeDef(name=type_name, fields=[])  # 你可以选择用一个简略的 TypeDef 表示
+                return TypeDef(name=type_name, fields=[])
             else:
                 raise SyntaxError(f"Expected '^' after '=', got {self.current()}")
 
-        # 结构体形式：TYPE Name ... ENDTYPE
+        # 类 / 结构体形式：TYPE Name ... ENDTYPE
         fields = []
+        methods = []
+
         while self.current() and not (self.current().type == "KEYWORD" and self.current().value == "ENDTYPE"):
-            # 只允许 DECLARE field : Type
-            self.eat("KEYWORD", "DECLARE")
-            field_name = self.eat("IDENTIFIER").value
-            self.eat("COLON")
+            # 默认 PUBLIC
+            access = "PUBLIC"
+            if self.current().type == "KEYWORD" and self.current().value in ("PUBLIC", "PRIVATE"):
+                access = self.eat("KEYWORD").value
 
-            # 可能是 inline pointer type for field
-            field_type = None
-            if self.current() and self.current().type == "CARET":
-                self.eat("CARET")
-                base_token = self.eat("KEYWORD")
-                if base_token.value not in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
-                    raise SyntaxError(f"Unknown base type for pointer field: {base_token.value}")
-                field_type = PointerType(base_type=base_token.value)
-            elif self.current() and self.current().type == "KEYWORD":
-                tt = self.eat("KEYWORD").value
-                if tt in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
-                    field_type = tt
-                elif tt in self.user_types:
-                    field_type = tt
+            # 字段
+            if self.current().type == "KEYWORD" and self.current().value == "DECLARE":
+                self.eat("KEYWORD", "DECLARE")
+                field_name = self.eat("IDENTIFIER").value
+                self.eat("COLON")
+
+                field_type = None
+                if self.current() and self.current().type == "CARET":
+                    self.eat("CARET")
+                    base_token = self.eat("KEYWORD")
+                    if base_token.value not in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
+                        raise SyntaxError(f"Unknown base type for pointer field: {base_token.value}")
+                    field_type = PointerType(base_type=base_token.value)
+                elif self.current() and self.current().type == "KEYWORD":
+                    tt = self.eat("KEYWORD").value
+                    if tt in ("INTEGER", "REAL", "STRING", "CHAR", "BOOLEAN", "DATE"):
+                        field_type = tt
+                    elif tt in self.user_types:
+                        field_type = tt
+                    else:
+                        raise SyntaxError(f"Unknown field type: {tt}")
+                elif self.current() and self.current().type == "IDENTIFIER":
+                    field_type = self.eat("IDENTIFIER").value
+                    if field_type not in self.user_types:
+                        raise SyntaxError(f"Unknown field type: {field_type}")
                 else:
-                    raise SyntaxError(f"Unknown field type: {tt}")
-            elif self.current() and self.current().type == "IDENTIFIER":
-                # user-defined type name
-                field_type = self.eat("IDENTIFIER").value
-                if field_type not in self.user_types:
-                    raise SyntaxError(f"Unknown field type: {field_type}")
-            else:
-                raise SyntaxError(f"Expected type name for field '{field_name}', got {self.current()}")
+                    raise SyntaxError(f"Expected type name for field '{field_name}', got {self.current()}")
 
-            fields.append((field_name, field_type))
+                fields.append((access, field_name, field_type))
+
+            # 方法（过程 / 函数）
+            elif self.current().type == "KEYWORD" and self.current().value == "PROCEDURE":
+                proc = self.parse_procedure_definition()
+                proc.access = access
+                methods.append(proc)
+
+            elif self.current().type == "KEYWORD" and self.current().value == "FUNCTION":
+                func = self.parse_function_definition()
+                func.access = access
+                methods.append(func)
+
+            else:
+                raise SyntaxError(f"Unexpected token in TYPE {type_name}: {self.current()}")
 
         self.eat("KEYWORD", "ENDTYPE")
-        # 注册结构体 type definition
-        self.user_types[type_name] = {name: typ for name, typ in fields}
-        return TypeDef(name=type_name, fields=fields)
+
+        # 始终注册为 ClassDef
+        class_def = ClassDef(name=type_name, fields=fields, methods=methods)
+        self.user_types[type_name] = class_def
+        print("REGISTER TYPE", type_name, "=>", self.user_types[type_name])
+        return class_def
+
 
 
     def parse_possible_field_access(self):
@@ -603,9 +627,11 @@ class Parser:
         if token.type == "NUMBER":
             self.eat("NUMBER")
             left = Number(token.value)
+            return left
         elif token.type == "STRING":
             self.eat("STRING")
             left = String(token.value.strip('"'))
+            return left
         elif token.type == "LPAREN":
             self.eat("LPAREN")
             left = self.parse_expression()
