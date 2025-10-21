@@ -45,6 +45,8 @@ Hope this will be helpful to CIE CS study and teaching :-)
  - File handling(forgot in the v1.0, will be updated)
  - Object-oriented Programming(forgot in the v1.0, will be updated)
 ## How to use?
+There are two ways to run this program
+### 1. Raw-code method
 1. ensure you have Python installed in your device and it's 3.11.9 or above
 2. first clone this Repository to local environment
 ```bash
@@ -77,7 +79,16 @@ cd this_folder
 ```bash
 python -m scripts.your_file
 ```
-9. Generally speaking the program passed all the function tests(except the functions that I forgot to accomplish), which means it doesn't suppose to fail with simple programs(I haven't test it with a complex program so it is possible to see a problem that doesn't relate with you). if you meet any unsolveable problem or bugs, please submit it at **GitHub Issues**, this will be really helpful for me to upgrade the tool. 
+9. Generally speaking the program passed all the function tests(except the functions that I forgot to accomplish), which means it doesn't suppose to fail with simple programs(I haven't test it with a complex program so it is possible to see a problem that doesn't relate with you). if you meet any unsolveable problem or bugs, please submit it at **GitHub Issues**, this will be really helpful for me to upgrade the tool.
+### Release method
+I've released a `.exe` version of the tool and it can run on any Windows system(suppose to), you do not need a python env in this way
+just download it somewhere you want and open cmd then enter
+```bash
+cd this_folder
+ciecs <filename>.pseudo
+```
+btw, I didn't and I won't post this program to any other websites so DO NOT TRUST A FILE FROM SOME UNKNOWN WEBSITES IT CAN BE A VIRUS
+I will attach the hash as well so you can verify the file you downloaded
 ## Contribution
 I might not figure out some of the bugs, if you find them out, please feel free to submit it at **GitHub Issues**!
 ## Donation
@@ -87,4 +98,5 @@ If you think my program is good, you can buy me a coffee! This will encourage me
 
 This project is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/).
 You may modify and redistribute this project non-commercially under the same license, with proper attribution.
+
 
